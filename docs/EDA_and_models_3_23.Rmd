@@ -186,6 +186,7 @@ multiple predictors, the worst case values are all centered more to the right th
 increased tumor size and irregular texture is generally more cause for concern. The suggested background paper confirms this as, "with all the shape features, a higher value corresponds to a less regular contour and thus to a higher probability of malignancy" (Street 5).
 
 ```{r, echo = FALSE, out.width="80%", include = FALSE, warnings = FALSE}
+library(nnet)
 library(tidyverse)
 library(tidymodels)
 library(readxl)
@@ -196,6 +197,7 @@ library(recipes)
 library(kknn)
 library(ggcorrplot)
 library(FactoMineR)
+library(keras)
 
 here("C:/Users/Carina W Yuen/Downloads/UCI_breast_cancer_data/uci_breast_cancer_data.xlsx")
 
@@ -792,16 +794,28 @@ data_2 <- data.frame(x3 = x3, x4 = x4)
 svm_fit <- ksvm(diagnosis~., data= data_2)
 plot(svm_fit, data = cancer_data_test)
 ```
+```{r, warnings = FALSE}
+x3_scaled <- scale(x_3, center = attr(x_train, "scaled:center"), scale = attr(x_train, "scaled:scale"))
+x4 <- scale(x_4, center = attr(x_train, "scaled:center"), scale = attr(x_train, "scaled:scale"))
+
+diagnosis<- as.factor(cancer_data_test$diagnosis)
+data_2 <- data.frame(x3 = x3, x4 = x4)
+nn_fit <- ksvm(diagnosis~., data= data_2)
+plot(svm_fit, data = cancer_data_test)
+```
 
 Wow! Here, we can visually see how there is only one point that might be a bit unclear for the classifier to differentiate, but
 overall, it is a great improvement. This makes sense since area and measures of size seem to be very indicative of the end classification.
 
-# Conclusion
+# Conclusion (2023)
 Here we see that SVM is our definite winner! The Accuracy is 1, or 100%, and the Sensitivity and Specificity are 1 for our testing set. This makes sense since SVM's tend to do better on smaller data sets. With about 600 observations, our data fits this really well. This showed how further background knowledge about the models, as well as our data can greatly improve and streamline our model selection process! 
 
 The second and third best models, in terms of roc_auc and accuracy, are random forest (Best accuracy: 96.75% Best roc_auc: 0.992) and logistic regression (Best accuracy: ~98.3% Best roc_auc: 0.9935). While logistic regression has a slightly better accuracy, the logistic regression has slightly higher roc_auc. The models are close enough that I would consider them both second choices to our SVM.
 
 Going back to our key insight about the close relation between biological function  and physical structure, it seems that as the number of indentations in the tumor increase, so does the size. The main takeaway from this analysis is that tumors with many concave points and a large radius tend to by malignant. The threshold value for concave points mean seems to be 0.05 for concave points mean. For values greater than that, it is very likely that the tumor is malignant. However, it seems that across tumors with fractal dimensions from roughly 0.05 to 0.1, there isn't a clear pattern of malignant and benign. As a result, I decided to do an SVM plot using the predictors concave points mean and area mean, and we can see we get a more decisive boundary! Overall, this indicates that concave points and area are the most important predictors! The main takeaway from our investigation is that larger tumors are also more irregular in shape, and thus have a higher chance of being malignant instead of benign.
+
+# Updated Conclusion: 
+Given the insight that SVM modeling performs well for predictive accuracy on this dataset, it's clear that there isn't a huge imbalance in the data and there is little noise in the dataset. The next model to be tested is Neural Networks.
 
 # Additional Resources
 “Active Contour Model.” Wikipedia, Wikimedia Foundation, 3 Aug. 2023, en.wikipedia.org/wiki/Active_contour_model#>:\~:text=Snakes%20in%20particular%20are%20designed,stereo%20matching%20and%20motion%20tracking. 
